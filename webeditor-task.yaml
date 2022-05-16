@@ -1,0 +1,28 @@
+- hosts: dev  
+  become_user: "{{ admin_user }}"
+  vars_files:
+    - vars/default.yaml
+  
+  tasks:
+  - name: Run code-server install script
+    shell: curl -fsSL https://code-server.dev/install.sh | sh  
+  
+  - name: Clone a git repository
+    git:      
+      repo: https://github.com/agburov/Python.git
+      dest: /home/khan/webeditor/
+      clone: yes
+      update: yes
+  
+  - name: Setup Python dependencies
+    shell: pip3 install -r /home/khan/webeditor/requirements.txt
+
+  - name: Install useful extensions to the code server
+    shell: |
+      code-server --install-extension kevinrose.vsc-python-indent
+      code-server --install-extension redhat.ansible
+      code-server --install-extension ms-azuretools.vscode-docker
+      code-server --install-extension 4ops.terraform
+
+  - name: Run code server without authentication in specific folder
+    shell: code-server --auth none /home/khan/webeditor
