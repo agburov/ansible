@@ -4,70 +4,80 @@
     - vars/default.yaml
 
   tasks:
-  - name: Install aptitude using apt
-    apt: name=aptitude state=latest update_cache=yes force_apt_get=yes
+    - name: Install aptitude using apt
+      apt:
+        name: aptitude
+        state: latest
+        update_cache: yes
+        force_apt_get: yes
 
-  - name: Install required system packages for Docker
-    apt: name={{ docker_required_packages }} state=latest update_cache=yes
+    - name: Install required system packages for Docker
+      apt:
+        name: "{{ docker_required_packages }}"
+        state: latest
+        update_cache: yes
 
-  - name: Add Docker GPG key
-    apt_key:
-      url: "{{ docker_gpg_url }}"
-      state: present
+    - name: Add Docker GPG key
+      apt_key:
+        url: "{{ docker_gpg_url }}"
+        state: present
 
-  - name: Add Docker repository
-    apt_repository:
-      repo: "{{ docker_repo }}"
-      state: present
+    - name: Add Docker repository
+      apt_repository:
+        repo: "{{ docker_repo }}"
+        state: present
 
-  - name: Install Docker
-    apt: name={{ docker_packges }} state=latest update_cache=yes
+    - name: Install Docker
+      apt:
+        name: "{{ docker_packges }}"
+        state: latest
+        update_cache: yes
 
-  - name: Install Python Docker modules
-    pip:
-      name: 
-        - docker
-        - docker-compose
+    - name: Install Python Docker modules
+      pip:
+        name:
+          - docker
+          - docker-compose
 
-  - name: Add user to docker group
-    user:
-      name: "{{ admin_user }}"
-      groups: docker
-      append: yes
+    - name: Add user to docker group
+      user:
+        name: "{{ admin_user }}"
+        groups: docker
+        append: yes
 
-  - name: Clone a git repository
-    git:
-      repo: https://github.com/agburov/react-redux-realworld-example-app.git
-      dest: /home/khan/repos/
-      clone: yes
-      update: yes
+    - name: Clone a git repository
+      git:
+        repo: https://github.com/agburov/react-redux-realworld-example-app.git
+        dest: /home/khan/repos/
+        clone: yes
+        update: yes
 
-  - name: Run Docker compose 
-    community.docker.docker_compose:
-      project_src: /home/khan/repos/
+    - name: Run Docker compose
+      community.docker.docker_compose:
+        project_src: /home/khan/repos/
 
-  - name: Gather facts about IP address
-    setup:
-      filter: ansible_default_ipv4.address
-  
-  - name: Waiting for the web server to start
-    wait_for:
-      port: "80"
-      host: "{{ ansible_default_ipv4.address }}"
-      delay: 10
-      timeout: 60
-      state: started
-      msg: "Something wrong with the web server settings"    
+    - name: Gather facts about IP address
+      setup:
+        filter: ansible_default_ipv4.address
 
-  - name: Confirm that 200 OK response is returned
-    uri:
-      url: "http://{{ ansible_default_ipv4.address }}"
-      method: GET
-      return_content: yes
-      body_format: json
-      status_code: 200
-    register: data
- 
-  - name: Print ip and status code information
-    debug: 
-      msg: "The URL {{ data.url }} returned {{ data.status }}"
+    - name: Waiting for the web server to start
+      wait_for:
+        port: "80"
+        host: "{{ ansible_default_ipv4.address }}"
+        delay: 10
+        timeout: 60
+        state: started
+        msg: "Something wrong with the web server settings"
+
+    - name: Confirm that 200 OK response is returned
+      uri:
+        url: "http://{{ ansible_default_ipv4.address }}"
+        method: GET
+        return_content: yes
+        body_format: json
+        status_code: 200
+      register: data
+
+    - name: Print ip and status code information
+      debug:
+        msg: "The URL {{ data.url }} returned {{ data.status }}"
